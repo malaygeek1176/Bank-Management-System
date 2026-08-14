@@ -17,6 +17,8 @@ public class Transaction {
     private Long id;
 
 
+    @Getter
+    @Setter
     @Column(nullable = false, unique = true, length = 50)
     private String transactionReference;
 
