@@ -1,16 +1,23 @@
 package com.bank.management.service;
 
-import com.bank.management.entity.Account;
+import com.bank.management.dto.response.AccountResponse;
 
 import java.util.List;
 
 public interface AccountService {
 
-    Account createAccount(Long customerId, Long accountTypeId);
+    AccountResponse createAccount(
+            Long customerId,
+            Long accountTypeId
+    );
 
-    Account getAccountById(Long id);
+    AccountResponse getAccountById(Long id);
 
-    Account getAccountByNumber(String accountNumber);
+    AccountResponse getAccountByNumber(
+            String accountNumber
+    );
 
-    List<Account> getAccountsByCustomer(Long customerId);
+    List<AccountResponse> getAccountsByCustomer(
+            Long customerId
+    );
 }

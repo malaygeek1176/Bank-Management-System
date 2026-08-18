@@ -1,18 +1,24 @@
 package com.bank.management.service;
 
-import com.bank.management.entity.Customer;
+import com.bank.management.dto.request.CreateCustomerRequest;
+import com.bank.management.dto.response.CustomerResponse;
 
 import java.util.List;
 
 public interface CustomerService {
 
-    Customer createCustomer(Customer customer);
+    CustomerResponse createCustomer(
+            CreateCustomerRequest request
+    );
 
-    Customer getCustomerById(Long id);
+    CustomerResponse getCustomerById(Long id);
 
-    List<Customer> getAllCustomers();
+    List<CustomerResponse> getAllCustomers();
 
-    Customer updateCustomer(Long id, Customer customer);
+    CustomerResponse updateCustomer(
+            Long id,
+            CreateCustomerRequest request
+    );
 
     void deleteCustomer(Long id);
 }

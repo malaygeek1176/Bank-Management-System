@@ -1,5 +1,6 @@
 package com.bank.management.service.impl;
 
+import com.bank.management.dto.response.AccountResponse;
 import com.bank.management.entity.Account;
 import com.bank.management.entity.AccountStatus;
 import com.bank.management.entity.AccountType;
@@ -23,7 +24,8 @@ public class AccountServiceImpl implements AccountService {
     private final CustomerRepository customerRepository;
     private final AccountTypeRepository accountTypeRepository;
 
-    private final SecureRandom secureRandom = new SecureRandom();
+    private final SecureRandom secureRandom =
+            new SecureRandom();
 
     public AccountServiceImpl(
             AccountRepository accountRepository,
@@ -37,65 +39,112 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public Account createAccount(Long customerId, Long accountTypeId) {
+    public AccountResponse createAccount(
+            Long customerId,
+            Long accountTypeId) {
 
-        Customer customer = customerRepository.findById(customerId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Customer not found with id: " + customerId
-                        ));
+        Customer customer =
+                customerRepository.findById(customerId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Customer not found with id: "
+                                                + customerId
+                                ));
 
-        AccountType accountType = accountTypeRepository.findById(accountTypeId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Account type not found with id: " + accountTypeId
-                        ));
+        AccountType accountType =
+                accountTypeRepository.findById(accountTypeId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Account type not found with id: "
+                                                + accountTypeId
+                                ));
 
         Account account = new Account();
 
-        account.setAccountNumber(generateUniqueAccountNumber());
+        account.setAccountNumber(
+                generateUniqueAccountNumber()
+        );
+
         account.setCustomer(customer);
         account.setAccountType(accountType);
-
-        //New Account amount is 0.00
         account.setBalance(BigDecimal.ZERO);
-
-        //Status Automatically ACTIVE
         account.setStatus(AccountStatus.ACTIVE);
 
-        return accountRepository.save(account);
+        Account savedAccount =
+                accountRepository.save(account);
+
+        return mapToResponse(savedAccount);
     }
 
     @Override
-    public Account getAccountById(Long id) {
+    public AccountResponse getAccountById(Long id) {
 
-        return accountRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Account not found with id: " + id
-                        ));
+        Account account =
+                accountRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Account not found with id: "
+                                                + id
+                                ));
+
+        return mapToResponse(account);
     }
 
     @Override
-    public Account getAccountByNumber(String accountNumber) {
+    public AccountResponse getAccountByNumber(
+            String accountNumber) {
 
-        return accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Account not found: " + accountNumber
-                        ));
+        Account account =
+                accountRepository
+                        .findByAccountNumber(accountNumber)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Account not found: "
+                                                + accountNumber
+                                ));
+
+        return mapToResponse(account);
     }
 
     @Override
-    public List<Account> getAccountsByCustomer(Long customerId) {
+    public List<AccountResponse> getAccountsByCustomer(
+            Long customerId) {
 
         if (!customerRepository.existsById(customerId)) {
+
             throw new ResourceNotFoundException(
-                    "Customer not found with id: " + customerId
+                    "Customer not found with id: "
+                            + customerId
             );
         }
 
-        return accountRepository.findByCustomerId(customerId);
+        return accountRepository
+                .findByCustomerId(customerId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private AccountResponse mapToResponse(
+            Account account) {
+
+        Customer customer = account.getCustomer();
+
+        AccountType accountType =
+                account.getAccountType();
+
+        return new AccountResponse(
+                account.getId(),
+                account.getAccountNumber(),
+                customer.getId(),
+                customer.getFirstName()
+                        + " "
+                        + customer.getLastName(),
+                accountType.getId(),
+                accountType.getName(),
+                account.getBalance(),
+                account.getStatus().name()
+        );
     }
 
     private String generateUniqueAccountNumber() {
@@ -103,50 +152,29 @@ public class AccountServiceImpl implements AccountService {
         String accountNumber;
 
         do {
-            accountNumber = generateAccountNumber();
+            accountNumber =
+                    generateAccountNumber();
 
-            //duplicate check karte hain
-        } while (accountRepository.existsByAccountNumber(accountNumber));
+        } while (
+                accountRepository
+                        .existsByAccountNumber(accountNumber)
+        );
 
         return accountNumber;
     }
 
     private String generateAccountNumber() {
 
-        StringBuilder accountNumber = new StringBuilder();
+        StringBuilder accountNumber =
+                new StringBuilder();
 
         for (int i = 0; i < 12; i++) {
 
-            //Account Number Generation
-            accountNumber.append(secureRandom.nextInt(10));
+            accountNumber.append(
+                    secureRandom.nextInt(10)
+            );
         }
 
         return accountNumber.toString();
     }
 }
-
-//flow
-
-//Customer ID
-//     ↓
-//CustomerRepository
-//     ↓
-//Customer exists?
-//     ↓
-//    YES
-//     ↓
-//Account Type ID
-//     ↓
-//AccountTypeRepository
-//     ↓
-//Account Type exists?
-//     ↓
-//    YES
-//     ↓
-//Generate Account Number
-//     ↓
-//Balance = 0
-//     ↓
-//Status = ACTIVE
-//     ↓
-//Save Account

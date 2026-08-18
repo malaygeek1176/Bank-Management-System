@@ -23,17 +23,16 @@ class RoleRepositoryTest {
     @Test
     void shouldSaveAndFindRole() {
 
-        Role role = new Role("CUSTOMER");
-
+        Role role = new Role("TEST_MANAGER");
         Role savedRole = roleRepository.save(role);
 
         assertNotNull(savedRole.getId());
 
         Optional<Role> foundRole =
-                roleRepository.findByName("CUSTOMER");
+                roleRepository.findByName("TEST_MANAGER");
 
         assertTrue(foundRole.isPresent());
 
-        assertEquals("CUSTOMER", foundRole.get().getName());
+        assertEquals("TEST_MANAGER", foundRole.get().getName());
     }
 }

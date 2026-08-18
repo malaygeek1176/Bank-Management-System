@@ -1,8 +1,10 @@
 package com.bank.management.config;
 
 import com.bank.management.entity.AccountType;
+import com.bank.management.entity.Role;
 import com.bank.management.entity.TransactionType;
 import com.bank.management.repository.AccountTypeRepository;
+import com.bank.management.repository.RoleRepository;
 import com.bank.management.repository.TransactionTypeRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -13,10 +15,22 @@ import java.math.BigDecimal;
 @Configuration
 public class DataSeeder {
 
+
+
     @Bean
     CommandLineRunner seedMasterData(
             AccountTypeRepository accountTypeRepository,
-            TransactionTypeRepository transactionTypeRepository) {
+            TransactionTypeRepository transactionTypeRepository,
+            RoleRepository roleRepository) {
+
+        if (roleRepository.findByName("CUSTOMER").isEmpty()) {
+
+            Role customerRole = new Role();
+
+            customerRole.setName("CUSTOMER");
+
+            roleRepository.save(customerRole);
+        }
 
         return args -> {
 

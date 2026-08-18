@@ -1,5 +1,6 @@
 package com.bank.management.service;
 
+import com.bank.management.dto.response.AccountResponse;
 import com.bank.management.entity.Account;
 import com.bank.management.entity.AccountStatus;
 import com.bank.management.entity.AccountType;
@@ -51,8 +52,15 @@ class AccountServiceTest {
     void shouldCreateAccountSuccessfully() {
 
         // 1. Create Role
-        Role role = new Role("CUSTOMER");
-        role = roleRepository.save(role);
+        Role role = roleRepository
+                .findByName("CUSTOMER")
+                .orElseGet(() -> {
+
+                    Role newRole = new Role();
+                    newRole.setName("CUSTOMER");
+
+                    return roleRepository.save(newRole);
+                });
 
 
         // 2. Create User
@@ -78,7 +86,7 @@ class AccountServiceTest {
 
         // 4. Create Account Type
         AccountType accountType = new AccountType();
-        accountType.setName("SAVINGS");
+        accountType.setName("TEST-SAVINGS");
         accountType.setDescription("Savings Account");
         accountType.setMinimumBalance(
                 new BigDecimal("1000.00")
@@ -88,7 +96,7 @@ class AccountServiceTest {
 
 
         // 5. Create Account through Service
-        Account account =
+        AccountResponse account =
                 accountService.createAccount(
                         customer.getId(),
                         accountType.getId()
@@ -111,18 +119,18 @@ class AccountServiceTest {
         );
 
         assertEquals(
-                AccountStatus.ACTIVE,
+                AccountStatus.ACTIVE.name(),
                 account.getStatus()
         );
 
         assertEquals(
                 customer.getId(),
-                account.getCustomer().getId()
+                account.getCustomerId()
         );
 
         assertEquals(
                 accountType.getId(),
-                account.getAccountType().getId()
+                account.getAccountTypeId()
         );
     }
 

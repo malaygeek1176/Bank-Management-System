@@ -68,8 +68,15 @@ class TransactionServiceTest {
     void setUp() {
 
         // Create Role
-        Role role = new Role("CUSTOMER");
-        role = roleRepository.save(role);
+        Role role = this.roleRepository
+                .findByName("CUSTOMER")
+                .orElseGet(() -> {
+
+                    Role newRole = new Role();
+                    newRole.setName("CUSTOMER");
+
+                    return this.roleRepository.save(newRole);
+                });
 
 
         // Create User

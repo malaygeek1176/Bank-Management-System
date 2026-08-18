@@ -25,13 +25,20 @@ class UserRepositoryTest {
     void shouldSaveAndFindUserByUsername() {
 
         // Create Role
-        Role role = new Role("CUSTOMER");
-        role = roleRepository.save(role);
+        Role role = roleRepository
+                .findByName("CUSTOMER")
+                .orElseGet(() -> {
+
+                    Role newRole = new Role();
+                    newRole.setName("CUSTOMER");
+
+                    return roleRepository.save(newRole);
+                });
 
         // Create User
         User user = new User();
 
-        user.setUsername("rahul123");
+        user.setUsername("testuser123");
         user.setPassword("test-password");
         user.setRole(role);
 
@@ -44,14 +51,14 @@ class UserRepositoryTest {
         // Find by username
         assertTrue(
                 userRepository
-                        .findByUsername("rahul123")
+                        .findByUsername("testuser123")
                         .isPresent()
         );
 
         // Check username exists
         assertTrue(
                 userRepository
-                        .existsByUsername("rahul123")
+                        .existsByUsername("testuser123")
         );
     }
 }
