@@ -1,5 +1,7 @@
 package com.bank.management.controller;
 
+import com.bank.management.dto.request.TransferRequest;
+import com.bank.management.dto.response.TransactionResponse;
 import com.bank.management.entity.Transaction;
 import com.bank.management.service.TransactionService;
 import org.springframework.http.ResponseEntity;
@@ -18,63 +20,99 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-    // Deposit money
     @PostMapping("/deposit")
-    public ResponseEntity<Transaction> deposit(
+    public ResponseEntity<TransactionResponse> deposit(
             @RequestParam String accountNumber,
             @RequestParam BigDecimal amount,
             @RequestParam(required = false) String description) {
 
-        return ResponseEntity.ok(
+        Transaction transaction =
                 transactionService.deposit(
                         accountNumber,
                         amount,
                         description
-                )
-        );
+                );
+
+        return ResponseEntity.ok(toResponse(transaction));
     }
 
-    // Withdraw money
+
     @PostMapping("/withdraw")
-    public ResponseEntity<Transaction> withdraw(
+    public ResponseEntity<TransactionResponse> withdraw(
             @RequestParam String accountNumber,
             @RequestParam BigDecimal amount,
             @RequestParam(required = false) String description) {
 
-        return ResponseEntity.ok(
+        Transaction transaction =
                 transactionService.withdraw(
                         accountNumber,
                         amount,
                         description
-                )
-        );
+                );
+
+        return ResponseEntity.ok(toResponse(transaction));
     }
 
-    // Transfer money
+
     @PostMapping("/transfer")
-    public ResponseEntity<Transaction> transfer(
-            @RequestParam String senderAccountNumber,
-            @RequestParam String receiverAccountNumber,
-            @RequestParam BigDecimal amount,
-            @RequestParam(required = false) String description) {
+    public ResponseEntity<TransactionResponse> transfer(
+            @RequestBody TransferRequest request) {
 
-        return ResponseEntity.ok(
+        Transaction transaction =
                 transactionService.transfer(
-                        senderAccountNumber,
-                        receiverAccountNumber,
-                        amount,
-                        description
-                )
-        );
+                        request.getSenderAccountNumber(),
+                        request.getReceiverAccountNumber(),
+                        request.getAmount(),
+                        request.getDescription()
+                );
+
+        return ResponseEntity.ok(toResponse(transaction));
     }
 
-    // Transaction history
+
     @GetMapping("/account/{accountNumber}")
-    public ResponseEntity<List<Transaction>> getAccountTransactions(
+    public ResponseEntity<List<TransactionResponse>> getAccountTransactions(
             @PathVariable String accountNumber) {
 
-        return ResponseEntity.ok(
-                transactionService.getAccountTransactions(accountNumber)
+        List<TransactionResponse> response =
+                transactionService
+                        .getAccountTransactions(accountNumber)
+                        .stream()
+                        .map(this::toResponse)
+                        .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    private TransactionResponse toResponse(Transaction transaction) {
+
+        TransactionResponse response = new TransactionResponse();
+
+        response.setId(transaction.getId());
+
+        response.setTransactionReference(
+                transaction.getTransactionReference()
         );
+
+        response.setAccountNumber(
+                transaction.getAccount().getAccountNumber()
+        );
+
+        response.setTransactionType(
+                transaction.getTransactionType().getName()
+        );
+
+        response.setAmount(transaction.getAmount());
+
+        response.setBalanceAfter(transaction.getBalanceAfter());
+
+        response.setDescription(transaction.getDescription());
+
+        response.setStatus(transaction.getStatus().name());
+
+        response.setCreatedAt(transaction.getCreatedAt());
+
+        return response;
     }
 }

@@ -5,6 +5,8 @@ import com.bank.management.service.AccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -40,5 +42,15 @@ public class AccountController {
     getAccountsByCustomer(@PathVariable Long customerId) {
         return ResponseEntity.ok(
                 accountService.getAccountsByCustomer(customerId));
+    }
+
+    @GetMapping("/{accountNumber}/balance")
+    public ResponseEntity<BigDecimal> getAccountBalance(
+            @PathVariable String accountNumber) {
+
+        AccountResponse account =
+                accountService.getAccountByNumber(accountNumber);
+
+        return ResponseEntity.ok(account.getBalance());
     }
 }

@@ -16,7 +16,6 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @Getter
     @Setter
     @Column(nullable = false, unique = true, length = 50)
