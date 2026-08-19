@@ -3,6 +3,7 @@ package com.bank.management.controller;
 import com.bank.management.dto.request.CreateCustomerRequest;
 import com.bank.management.dto.response.CustomerResponse;
 import com.bank.management.service.CustomerService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<CustomerResponse> createCustomer(@RequestBody CreateCustomerRequest request) {
+    public ResponseEntity<CustomerResponse> createCustomer(@Valid @RequestBody CreateCustomerRequest request) {
         CustomerResponse response = customerService.createCustomer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

@@ -4,6 +4,7 @@ import com.bank.management.dto.request.TransferRequest;
 import com.bank.management.dto.response.TransactionResponse;
 import com.bank.management.entity.Transaction;
 import com.bank.management.service.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,7 +57,7 @@ public class TransactionController {
 
     @PostMapping("/transfer")
     public ResponseEntity<TransactionResponse> transfer(
-            @RequestBody TransferRequest request) {
+            @Valid @RequestBody TransferRequest request) {
 
         Transaction transaction =
                 transactionService.transfer(

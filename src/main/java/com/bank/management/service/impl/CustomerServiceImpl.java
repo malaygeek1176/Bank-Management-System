@@ -14,6 +14,7 @@ import com.bank.management.entity.User;
 import com.bank.management.repository.RoleRepository;
 import com.bank.management.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -26,14 +27,18 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final RoleRepository roleRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     public CustomerServiceImpl(
             CustomerRepository customerRepository,
             UserRepository userRepository,
-            RoleRepository roleRepository) {
+            RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder) {
 
         this.customerRepository = customerRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -71,7 +76,7 @@ public class CustomerServiceImpl implements CustomerService {
         User user = new User();
 
         user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(customerRole);
 
         User savedUser =

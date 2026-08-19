@@ -360,6 +360,7 @@ class TransactionServiceTest {
         accountRepository.save(receiverAccount);
 
 
+        long initialTransactionCount = transactionRepository.count();
         // Transfer ₹3,000
         Transaction transaction =
                 transactionService.transfer(
@@ -408,10 +409,9 @@ class TransactionServiceTest {
 
 
         // Two transactions should exist
-        long transactionCount =
-                transactionRepository.count();
+        long transactionCount = transactionRepository.count();
 
-        assertEquals(2, transactionCount);
+        assertEquals(2, transactionCount - initialTransactionCount);
     }
 
 
