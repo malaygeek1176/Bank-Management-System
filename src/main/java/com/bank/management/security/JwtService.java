@@ -26,7 +26,10 @@ public class JwtService {
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(
-                        new Date(System.currentTimeMillis() + 1000 * 60 * 60)
+                        new Date(
+                                System.currentTimeMillis()
+                                        + 1000 * 60 * 60
+                        )
                 )
                 .signWith(key)
                 .compact();
@@ -42,9 +45,13 @@ public class JwtService {
                 .getSubject();
     }
 
-    public boolean isTokenValid(String token, String username) {
+    public boolean isTokenValid(
+            String token,
+            String username
+    ) {
 
-        String extractedUsername = extractUsername(token);
+        String extractedUsername =
+                extractUsername(token);
 
         return extractedUsername.equals(username);
     }

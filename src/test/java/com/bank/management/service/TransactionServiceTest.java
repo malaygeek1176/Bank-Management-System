@@ -26,6 +26,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
 import java.math.BigDecimal;
+import java.util.List;
+
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -263,6 +266,47 @@ class TransactionServiceTest {
         assertEquals(
                 new BigDecimal("10000.00"),
                 updatedAccount.getBalance()
+        );
+    }
+
+
+    @Test
+    void shouldGetAccountTransactionsSuccessfully() {
+
+        // Create a transaction
+        transactionService.deposit(
+                account.getAccountNumber(),
+                new BigDecimal("2000"),
+                "Test deposit"
+        );
+
+        // Fetch transaction history
+        List<Transaction> transactions =
+                transactionService.getAccountTransactions(
+                        account.getAccountNumber()
+                );
+
+        // Verify history
+        assertNotNull(transactions);
+        assertEquals(1, transactions.size());
+
+        Transaction transaction = transactions.get(0);
+
+        assertEquals(
+                new BigDecimal("2000"),
+                transaction.getAmount()
+        );
+
+        assertEquals(
+                0,
+                new BigDecimal("12000").compareTo(
+                        transaction.getBalanceAfter()
+                )
+        );
+
+        assertEquals(
+                TransactionStatus.SUCCESS,
+                transaction.getStatus()
         );
     }
 

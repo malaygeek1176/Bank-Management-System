@@ -22,7 +22,9 @@ public class AuthController {
             AuthenticationManager authenticationManager,
             JwtService jwtService
     ) {
-        this.authenticationManager = authenticationManager;
+        this.authenticationManager =
+                authenticationManager;
+
         this.jwtService = jwtService;
     }
 
@@ -38,7 +40,10 @@ public class AuthController {
                 )
         );
 
-        String token = jwtService.generateToken(request.getUsername());
+        String token =
+                jwtService.generateToken(
+                        request.getUsername()
+                );
 
         return ResponseEntity.ok(
                 new LoginResponse(token)

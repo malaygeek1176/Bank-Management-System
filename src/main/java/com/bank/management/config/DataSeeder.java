@@ -110,27 +110,3 @@ public class DataSeeder {
         }
     }
 }
-
-//Spring Boot starts
-//       ↓
-//DataSeeder executes
-//       ↓
-//Check SAVINGS
-//       ↓
-//Not found → Create
-//       ↓
-//Check CURRENT
-//       ↓
-//Not found → Create
-//       ↓
-//Check DEPOSIT
-//       ↓
-//Not found → Create
-//       ↓
-//Check WITHDRAWAL
-//       ↓
-//Not found → Create
-//       ↓
-//Check TRANSFER
-//       ↓
-//Not found → Create
