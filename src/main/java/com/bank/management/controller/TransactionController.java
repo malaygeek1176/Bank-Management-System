@@ -4,8 +4,13 @@ import com.bank.management.dto.request.TransferRequest;
 import com.bank.management.dto.response.TransactionResponse;
 import com.bank.management.entity.Transaction;
 import com.bank.management.service.TransactionService;
+
 import jakarta.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -17,15 +22,24 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(
+            TransactionService transactionService
+    ) {
         this.transactionService = transactionService;
     }
 
+
     @PostMapping("/deposit")
+    @PreAuthorize(
+            "hasRole('ADMIN') or " +
+                    "@accountSecurity.isAccountNumberOwner(" +
+                    "#accountNumber, authentication)"
+    )
     public ResponseEntity<TransactionResponse> deposit(
             @RequestParam String accountNumber,
             @RequestParam BigDecimal amount,
-            @RequestParam(required = false) String description) {
+            @RequestParam(required = false) String description
+    ) {
 
         Transaction transaction =
                 transactionService.deposit(
@@ -34,15 +48,23 @@ public class TransactionController {
                         description
                 );
 
-        return ResponseEntity.ok(toResponse(transaction));
+        return ResponseEntity.ok(
+                toResponse(transaction)
+        );
     }
 
 
     @PostMapping("/withdraw")
+    @PreAuthorize(
+            "hasRole('ADMIN') or " +
+                    "@accountSecurity.isAccountNumberOwner(" +
+                    "#accountNumber, authentication)"
+    )
     public ResponseEntity<TransactionResponse> withdraw(
             @RequestParam String accountNumber,
             @RequestParam BigDecimal amount,
-            @RequestParam(required = false) String description) {
+            @RequestParam(required = false) String description
+    ) {
 
         Transaction transaction =
                 transactionService.withdraw(
@@ -51,13 +73,21 @@ public class TransactionController {
                         description
                 );
 
-        return ResponseEntity.ok(toResponse(transaction));
+        return ResponseEntity.ok(
+                toResponse(transaction)
+        );
     }
 
 
     @PostMapping("/transfer")
+    @PreAuthorize(
+            "hasRole('ADMIN') or " +
+                    "@accountSecurity.isAccountNumberOwner(" +
+                    "#request.senderAccountNumber, authentication)"
+    )
     public ResponseEntity<TransactionResponse> transfer(
-            @Valid @RequestBody TransferRequest request) {
+            @Valid @RequestBody TransferRequest request
+    ) {
 
         Transaction transaction =
                 transactionService.transfer(
@@ -67,13 +97,22 @@ public class TransactionController {
                         request.getDescription()
                 );
 
-        return ResponseEntity.ok(toResponse(transaction));
+        return ResponseEntity.ok(
+                toResponse(transaction)
+        );
     }
 
 
     @GetMapping("/account/{accountNumber}")
-    public ResponseEntity<List<TransactionResponse>> getAccountTransactions(
-            @PathVariable String accountNumber) {
+    @PreAuthorize(
+            "hasRole('ADMIN') or " +
+                    "@accountSecurity.isAccountNumberOwner(" +
+                    "#accountNumber, authentication)"
+    )
+    public ResponseEntity<List<TransactionResponse>>
+    getAccountTransactions(
+            @PathVariable String accountNumber
+    ) {
 
         List<TransactionResponse> response =
                 transactionService
@@ -86,9 +125,12 @@ public class TransactionController {
     }
 
 
-    private TransactionResponse toResponse(Transaction transaction) {
+    private TransactionResponse toResponse(
+            Transaction transaction
+    ) {
 
-        TransactionResponse response = new TransactionResponse();
+        TransactionResponse response =
+                new TransactionResponse();
 
         response.setId(transaction.getId());
 
@@ -97,22 +139,34 @@ public class TransactionController {
         );
 
         response.setAccountNumber(
-                transaction.getAccount().getAccountNumber()
+                transaction.getAccount()
+                        .getAccountNumber()
         );
 
         response.setTransactionType(
-                transaction.getTransactionType().getName()
+                transaction.getTransactionType()
+                        .getName()
         );
 
-        response.setAmount(transaction.getAmount());
+        response.setAmount(
+                transaction.getAmount()
+        );
 
-        response.setBalanceAfter(transaction.getBalanceAfter());
+        response.setBalanceAfter(
+                transaction.getBalanceAfter()
+        );
 
-        response.setDescription(transaction.getDescription());
+        response.setDescription(
+                transaction.getDescription()
+        );
 
-        response.setStatus(transaction.getStatus().name());
+        response.setStatus(
+                transaction.getStatus().name()
+        );
 
-        response.setCreatedAt(transaction.getCreatedAt());
+        response.setCreatedAt(
+                transaction.getCreatedAt()
+        );
 
         return response;
     }

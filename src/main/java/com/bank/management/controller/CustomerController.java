@@ -3,6 +3,7 @@ package com.bank.management.controller;
 import com.bank.management.dto.request.CreateCustomerRequest;
 import com.bank.management.dto.response.CustomerResponse;
 import com.bank.management.service.CustomerService;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.validation.Valid;
 
@@ -43,6 +44,9 @@ public class CustomerController {
 
 
     @GetMapping("/{id}")
+    @PreAuthorize(
+            "hasRole('ADMIN') or @customerSecurity.isOwner(#id, authentication)"
+    )
     public ResponseEntity<CustomerResponse> getCustomerById(
             @PathVariable Long id
     ) {
@@ -54,6 +58,7 @@ public class CustomerController {
 
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CustomerResponse>> getAllCustomers() {
 
         return ResponseEntity.ok(
@@ -63,9 +68,12 @@ public class CustomerController {
 
 
     @PutMapping("/{id}")
+    @PreAuthorize(
+            "hasRole('ADMIN') or @customerSecurity.isOwner(#id, authentication)"
+    )
     public ResponseEntity<CustomerResponse> updateCustomer(
             @PathVariable Long id,
-            @RequestBody CreateCustomerRequest request
+            @Valid @RequestBody CreateCustomerRequest request
     ) {
 
         return ResponseEntity.ok(
