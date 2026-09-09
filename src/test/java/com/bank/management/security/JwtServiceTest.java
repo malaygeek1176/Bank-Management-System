@@ -9,54 +9,69 @@ class JwtServiceTest {
 
     private JwtService jwtService;
 
+    private static final String TEST_SECRET =
+            "bank-management-system-test-secret-key-2026-very-secure";
+
+
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
+
+        jwtService = new JwtService(TEST_SECRET);
     }
 
+
     @Test
-    void generateToken_shouldCreateToken() {
+    void generateToken_shouldGenerateValidToken() {
 
         String token =
-                jwtService.generateToken("admin");
+                jwtService.generateToken("testuser");
 
         assertNotNull(token);
         assertFalse(token.isBlank());
     }
 
+
     @Test
     void extractUsername_shouldReturnCorrectUsername() {
 
         String token =
-                jwtService.generateToken("admin");
+                jwtService.generateToken("testuser");
 
         String username =
                 jwtService.extractUsername(token);
 
-        assertEquals("admin", username);
+        assertEquals("testuser", username);
     }
+
 
     @Test
     void isTokenValid_shouldReturnTrueForCorrectUsername() {
 
         String token =
-                jwtService.generateToken("admin");
+                jwtService.generateToken("testuser");
 
-        boolean valid =
-                jwtService.isTokenValid(token, "admin");
+        boolean result =
+                jwtService.isTokenValid(
+                        token,
+                        "testuser"
+                );
 
-        assertTrue(valid);
+        assertTrue(result);
     }
+
 
     @Test
     void isTokenValid_shouldReturnFalseForWrongUsername() {
 
         String token =
-                jwtService.generateToken("admin");
+                jwtService.generateToken("testuser");
 
-        boolean valid =
-                jwtService.isTokenValid(token, "customer");
+        boolean result =
+                jwtService.isTokenValid(
+                        token,
+                        "wronguser"
+                );
 
-        assertFalse(valid);
+        assertFalse(result);
     }
 }

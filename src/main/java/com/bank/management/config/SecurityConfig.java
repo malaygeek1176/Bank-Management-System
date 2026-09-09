@@ -1,7 +1,7 @@
 package com.bank.management.config;
 
 import com.bank.management.security.JwtAuthenticationFilter;
-
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,11 +17,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -33,10 +35,12 @@ public class SecurityConfig {
                 jwtAuthenticationFilter;
     }
 
+
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     AuthenticationManager authenticationManager(
@@ -45,6 +49,7 @@ public class SecurityConfig {
 
         return configuration.getAuthenticationManager();
     }
+
 
     @Bean
     SecurityFilterChain securityFilterChain(
@@ -55,15 +60,23 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .exceptionHandling(exception -> exception
+
+                        // 401 - Not authenticated
                         .authenticationEntryPoint(
                                 new HttpStatusEntryPoint(
                                         HttpStatus.UNAUTHORIZED
                                 )
                         )
+
+                        // 403 - Authenticated but not authorized
+                        .accessDeniedHandler(
+                                accessDeniedHandler()
+                        )
                 )
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // Public endpoints
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/swagger-ui/**",
@@ -71,6 +84,13 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        // Customer registration
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.POST,
+                                "/api/customers"
+                        ).permitAll()
+
+                        // Every other endpoint requires authentication
                         .anyRequest().authenticated()
                 )
 
@@ -81,6 +101,33 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+
+    @Bean
+    AccessDeniedHandler accessDeniedHandler() {
+
+        return (request, response, exception) -> {
+
+            response.setStatus(
+                    HttpStatus.FORBIDDEN.value()
+            );
+
+            response.setContentType(
+                    "application/json"
+            );
+
+            response.getWriter().write(
+                    """
+                    {
+                        "status": 403,
+                        "error": "Forbidden",
+                        "message": "You do not have permission to access this resource"
+                    }
+                    """
+            );
+        };
+    }
+
 
     @Bean
     FilterRegistrationBean<JwtAuthenticationFilter>

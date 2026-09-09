@@ -16,28 +16,32 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(
-        properties = {
-                "logging.level.org.springframework.security=DEBUG"
-        }
-)
+
+@SpringBootTest
 @AutoConfigureMockMvc
 class SecurityIntegrationTest {
+
 
     @Autowired
     private MockMvc mockMvc;
 
+
     @Autowired
     private JwtService jwtService;
+
 
     @Autowired
     private UserRepository userRepository;
 
+
     @Autowired
     private RoleRepository roleRepository;
+
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -46,6 +50,10 @@ class SecurityIntegrationTest {
     @BeforeEach
     void setUp() {
 
+        // =========================
+        // CUSTOMER ROLE
+        // =========================
+
         Role customerRole =
                 roleRepository.findByName("CUSTOMER")
                         .orElseGet(() ->
@@ -53,6 +61,24 @@ class SecurityIntegrationTest {
                                         new Role("CUSTOMER")
                                 )
                         );
+
+
+        // =========================
+        // ADMIN ROLE
+        // =========================
+
+        Role adminRole =
+                roleRepository.findByName("ADMIN")
+                        .orElseGet(() ->
+                                roleRepository.save(
+                                        new Role("ADMIN")
+                                )
+                        );
+
+
+        // =========================
+        // CUSTOMER TEST USER
+        // =========================
 
         if (userRepository.findByUsername(
                 "securitytest"
@@ -74,8 +100,38 @@ class SecurityIntegrationTest {
 
             userRepository.save(user);
         }
+
+
+        // =========================
+        // ADMIN TEST USER
+        // =========================
+
+        if (userRepository.findByUsername(
+                "securityadmin"
+        ).isEmpty()) {
+
+            User admin = new User();
+
+            admin.setUsername("securityadmin");
+
+            admin.setPassword(
+                    passwordEncoder.encode(
+                            "admin-password"
+                    )
+            );
+
+            admin.setRole(adminRole);
+
+            admin.setEnabled(true);
+
+            userRepository.save(admin);
+        }
     }
 
+
+    // =====================================================
+    // 1. NO TOKEN
+    // =====================================================
 
     @Test
     void getCustomersWithoutToken_shouldReturnUnauthorized()
@@ -87,9 +143,15 @@ class SecurityIntegrationTest {
                                         MediaType.APPLICATION_JSON
                                 )
                 )
-                .andExpect(status().isUnauthorized());
+                .andExpect(
+                        status().isUnauthorized()
+                );
     }
 
+
+    // =====================================================
+    // 2. VALID CUSTOMER TOKEN
+    // =====================================================
 
     @Test
     void getCustomersWithValidToken_shouldAllowAccess()
@@ -110,6 +172,86 @@ class SecurityIntegrationTest {
                                         MediaType.APPLICATION_JSON
                                 )
                 )
-                .andExpect(status().isOk());
+                .andExpect(
+                        status().isOk()
+                );
+    }
+
+
+    // =====================================================
+    // 3. CUSTOMER CANNOT DELETE CUSTOMER
+    // =====================================================
+
+    @Test
+    void customerDeletingCustomer_shouldReturnForbidden()
+            throws Exception {
+
+        String token =
+                jwtService.generateToken(
+                        "securitytest"
+                );
+
+        mockMvc.perform(
+                        delete("/api/customers/999999")
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                )
+                .andExpect(
+                        status().isForbidden()
+                );
+    }
+
+
+    // =====================================================
+    // 4. ADMIN CAN ACCESS DELETE ENDPOINT
+    // =====================================================
+
+    @Test
+    void adminDeletingNonExistingCustomer_shouldReturnNotFound()
+            throws Exception {
+
+        String token =
+                jwtService.generateToken(
+                        "securityadmin"
+                );
+
+        mockMvc.perform(
+                        delete("/api/customers/999999")
+                                .header(
+                                        "Authorization",
+                                        "Bearer " + token
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                )
+                .andExpect(
+                        status().isNotFound()
+                );
+    }
+
+
+    // =====================================================
+    // 5. NO TOKEN CANNOT DELETE CUSTOMER
+    // =====================================================
+
+    @Test
+    void deletingCustomerWithoutToken_shouldReturnUnauthorized()
+            throws Exception {
+
+        mockMvc.perform(
+                        delete("/api/customers/999999")
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
     }
 }
